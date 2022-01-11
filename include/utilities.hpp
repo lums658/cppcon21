@@ -46,46 +46,38 @@ auto graph_edge(std::tuple<Ts...> t) {
 }
 
 /**
- * Fill a plain graph from edge list
- */
-template <class EdgeList, class Adjacency>
-void push_back_plain_fill(const EdgeList& edge_list, Adjacency& adj, bool directed, size_t idx) {
-  const size_t jdx = (idx + 1) % 2;
-
-  for (auto&& e : edge_list) {
-
-    if (idx == 0) {
-      std::apply([&](size_t u, size_t v) { adj[u].emplace_back(v); }, e);
-      if (!directed) {
-        std::apply([&](size_t u, size_t v) { adj[v].emplace_back(u); }, e);
-      }
-    } else {
-      std::apply([&](size_t u, size_t v) { adj[v].emplace_back(u); }, e);
-      if (!directed) {
-        std::apply([&](size_t u, size_t v) { adj[u].emplace_back(v); }, e);
-      }
-    }
-  }
-}
-
-/**
- * Fill a non-plain graph from edge list
+ * Fill a plain or non-plain graph from edge list
  */
 template <class EdgeList, class Adjacency>
 void push_back_fill(const EdgeList& edge_list, Adjacency& adj, bool directed, size_t idx) {
   const size_t jdx = (idx + 1) % 2;
 
   for (auto&& e : edge_list) {
-
-    if (idx == 0) {
-      std::apply([&](size_t u, size_t v, auto... props) { adj[u].emplace_back(v, props...); }, e);
+    if (0 == idx) {
+      std::apply(
+          [&](auto... properties) {
+            adj[std::get<0>(e)].emplace_back(std::get<1>(e), properties...);
+          },
+          props(e));
       if (!directed) {
-        std::apply([&](size_t u, size_t v, auto... props) { adj[v].emplace_back(u, props...); }, e);
+        std::apply(
+            [&](auto... properties) {
+              adj[std::get<1>(e)].emplace_back(std::get<0>(e), properties...);
+            },
+            props(e));
       }
     } else {
-      std::apply([&](size_t u, size_t v, auto... props) { adj[v].emplace_back(u, props...); }, e);
+      std::apply(
+          [&](auto... properties) {
+            adj[std::get<1>(e)].emplace_back(std::get<0>(e), properties...);
+          },
+          props(e));
       if (!directed) {
-        std::apply([&](size_t u, size_t v, auto... props) { adj[u].emplace_back(v, props...); }, e);
+        std::apply(
+            [&](auto... properties) {
+              adj[std::get<0>(e)].emplace_back(std::get<1>(e), properties...);
+            },
+            props(e));
       }
     }
   }
@@ -163,7 +155,7 @@ auto make_plain_graph(const V& vertices, const E& edges, bool directed = true, s
   auto index_edges = make_plain_edges(vertex_map, edges);
 
   Graph G(size(vertices));
-  push_back_plain_fill(index_edges, G, directed, idx);
+  push_back_fill(index_edges, G, directed, idx);
 
   return G;
 }
@@ -232,7 +224,7 @@ auto make_plain_bipartite_graph(const V1& left_vertices, const V2& right_vertice
   auto graph_size  = idx == 0 ? size(left_vertices) : size(right_vertices);
 
   Graph G(size(left_vertices));
-  push_back_plain_fill(index_edges, G, true, idx);
+  push_back_fill(index_edges, G, true, idx);
 
   return G;
 }
@@ -246,8 +238,8 @@ auto make_plain_bipartite_graphs(const V1& left_vertices, const V2& right_vertic
   Graph G(size(left_vertices));
   Graph H(size(right_vertices));
 
-  push_back_plain_fill(index_edges, G, true, 0);
-  push_back_plain_fill(index_edges, H, true, 1);
+  push_back_fill(index_edges, G, true, 0);
+  push_back_fill(index_edges, H, true, 1);
 
   return make_tuple(G, H);
 }
