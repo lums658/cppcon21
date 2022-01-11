@@ -36,11 +36,11 @@ int main() {
    */
   std::vector<std::vector<size_t>> G(34);
   static_assert(adjacency_list<decltype(G)>);
-  push_back_plain_fill(karate_index_edge_list, G, false, 0);
+  push_back_fill(karate_index_edge_list, G, false, 0);
 
   std::vector<std::list<std::tuple<size_t>>> H(34);
   static_assert(adjacency_list<decltype(H)>);
-  push_back_plain_fill(karate_index_edge_list, H, false, 0);
+  push_back_fill(karate_index_edge_list, H, false, 0);
   push_back_fill(karate_index_edge_list, H, false, 0);
 
   std::vector<std::list<std::tuple<size_t, double>>> I(34);
